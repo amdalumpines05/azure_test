@@ -1,0 +1,93 @@
+on: workflow_dispatch 
+
+name: AzureStorageAccountv2 
+
+jobs: 
+  main-login-and-remove-lock:
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Log in with Azure Main Account
+        uses: azure/login@v1
+        with:    
+          creds: '${{ secrets.AZURE_MAIN_CREDENTIALS }}' 
+          
+          
+      - name: Running a sample AZ CLI command to unlock loc
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest 
+          inlineScript: | 
+            echo "Delete the read only lock"
+            az group lock delete -n ReadOnlyLock -g ${{ vars.RG_NAME }}
+
+          
+      - name: Logging out of AZ main account
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest 
+          inlineScript: | 
+            echo "logging out"
+              az logout
+              az cache purge
+              az account clear
+
+
+  create-storage-account:
+    needs: main-login-and-remove-lock
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Log in with Azure with RG SP with contri access
+        uses: azure/login@v1
+        with:    
+          creds: '${{ secrets.AZURE_CREDENTIALS }}' 
+          
+          
+      - name: Running a sample AZ CLI command to create a Storage Account
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest 
+          inlineScript: | 
+            echo "Create a storage account"
+            az storage account create -n abcdstddf676 -g rg-usergroup6 -l eastus --sku Standard_LRS --kind StorageV2
+
+          
+      - name: Logging out of AZ account
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest 
+          inlineScript: | 
+            echo "logging out"
+              az logout
+              az cache purge
+              az account clear
+
+
+
+  main-login-and-enable-lock:
+    needs: create-storage-account
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Log in with Azure Main Account
+        uses: azure/login@v1
+        with:    
+          creds: '${{ secrets.AZURE_MAIN_CREDENTIALS }}' 
+          
+          
+      - name: Running a AZ CLI command to lock
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest 
+          inlineScript: | 
+            echo "Create the read only lock"
+            az group lock create --lock-type ReadOnly -n ReadOnlyLock -g ${{ vars.RG_NAME }}
+
+          
+      - name: Logging out of AZ main account
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest 
+          inlineScript: | 
+            echo "logging out"
+              az logout
+              az cache purge
+              az account clear
