@@ -12,7 +12,7 @@ jobs:
           creds: '${{ secrets.AZURE_MAIN_CREDENTIALS }}' 
           
           
-      - name: Running a sample AZ CLI command to unlock loc
+      - name: Running a sample AZ CLI command to unlock lock
         uses: azure/CLI@v1
         with:
           azcliversion: latest 
@@ -48,7 +48,7 @@ jobs:
           azcliversion: latest 
           inlineScript: | 
             echo "Create a storage account"
-            az storage account create -n abcdstddf676 -g rg-usergroup6 -l eastus --sku Standard_LRS --kind StorageV2
+            az storage account create -n "sa"${{github.run_id}} -g ${{vars.RG_NAME}} -l eastus --sku Standard_LRS --kind StorageV2
 
           
       - name: Logging out of AZ account
